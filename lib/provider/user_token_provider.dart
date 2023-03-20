@@ -15,7 +15,7 @@ extension ChatGptKeyReader on String {
 }
 
 class ChatGptTokenNotifier extends StateNotifier<String?> {
-  ChatGptTokenNotifier() : super('');
+  ChatGptTokenNotifier() : super(null);
 
   void readToken() async {
     try {

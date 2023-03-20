@@ -29,11 +29,13 @@ class MyApp extends ConsumerWidget {
     return MaterialApp(
       theme: chatGptTheme,
       debugShowCheckedModeBanner: false,
-      home: token == null || token.isEmpty
-          ? const SaveTokenPage()
-          : ChatPage(
-              token: token,
-            ),
+      home: token == null
+          ? const Text('waiting')
+          : token.isEmpty
+              ? const SaveTokenPage()
+              : ChatPage(
+                  token: token,
+                ),
     );
   }
 }
