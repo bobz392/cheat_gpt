@@ -1,5 +1,6 @@
 import 'package:dart_openai/openai.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
@@ -24,7 +25,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   final List<types.Message> _messages = [];
   final _user = const types.User(
       id: '82091008-a484-4a89-ae75-a22bf8d6f3ac', firstName: 'Xi');
-  final _user1 = const types.User(
+  final _gpt = const types.User(
       id: '82091008-a484-4a29-ae75-a22bf8d6f3ac',
       firstName: 'Chat-GPT(tap to speak)');
   final _uuid = const Uuid();
@@ -79,9 +80,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           options: const InputOptions(),
         ),
       ]),
+      onMessageDoubleTap: (context, message) {
+        if (message is types.TextMessage) {
+          if (message.author.id != _user.id) {
+            var data = ClipboardData(text: message.text);
+            Clipboard.setData(data);
+          } else {}
+        }
+      },
       onMessageTap: (context, message) async {
         debugPrint(message.type.toString());
-        if (message is types.TextMessage && message.author.id != _user.id) {
+        if (message is types.TextMessage) {
           debugPrint('start speak');
           await flutterTts.stop();
           if (_currentSelection == 0) {
@@ -93,6 +102,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           }
           var result = await flutterTts.speak(message.text);
           debugPrint('speak result = $result');
+          if (message.author.id != _user.id) {
+          } else {
+            var data = ClipboardData(text: message.text);
+            Clipboard.setData(data);
+          }
         }
       },
     ));
@@ -117,18 +131,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
 
     _addMessage(textMessage);
-    if (_currentSelection == 4) {
+
+    if (_currentSelection == 0) {
+      _sendAI('翻译成中文: ${message.text}');
+    } else if (_currentSelection == 1) {
+      _sendAI('翻译成日语: ${message.text}');
+    } else if (_currentSelection == 2) {
+      _sendAI('翻译成英语: ${message.text}');
+    } else if (_currentSelection == 4) {
       _sendImage(message.text);
     } else {
-      if (_currentSelection == 0) {
-        _sendAI('翻译成中文: ${message.text}');
-      } else if (_currentSelection == 1) {
-        _sendAI('翻译成日语: ${message.text}');
-      } else if (_currentSelection == 2) {
-        _sendAI('翻译成英语: ${message.text}');
-      } else {
-        _sendAI(message.text);
-      }
+      _sendAI(message.text);
     }
   }
 
@@ -171,7 +184,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       );
 
       final imageMessage = types.ImageMessage(
-          author: _user1,
+          author: _gpt,
           id: _uuid.v4(),
           name: prompt,
           size: 1024 * 1024,
@@ -194,7 +207,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       debugPrint(chatCompletion.usage.toString());
       final result = chatCompletion.choices.first.message.content;
       final textMessage = types.TextMessage(
-          author: _user1,
+          author: _gpt,
           createdAt: DateTime.now().millisecondsSinceEpoch,
           id: _uuid.v4(),
           text: result.trim());
@@ -207,7 +220,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   void _addErrorMessage(Object error) {
     final textMessage = types.TextMessage(
-        author: _user1,
+        author: _gpt,
         createdAt: DateTime.now().millisecondsSinceEpoch,
         id: _uuid.v4(),
         text: error.toString());
