@@ -12,7 +12,7 @@ import 'package:window_size/window_size.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    setWindowTitle('cheat-gpp');
+    setWindowTitle('daydayup');
     setWindowMinSize(const Size(1100, 700));
   }
 
@@ -25,17 +25,14 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final token = ref.watch(tokenProvider);
-    debugPrint("token = $token");
     return MaterialApp(
       theme: chatGptTheme,
       debugShowCheckedModeBanner: false,
       home: token == null
-          ? const Text('waiting')
-          : token.isEmpty
-              ? const SaveTokenPage()
-              : ChatPage(
-                  token: token,
-                ),
+          ? const SaveTokenPage()
+          : ChatPage(
+              token: token,
+            ),
     );
   }
 }

@@ -35,6 +35,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   @override
   void initState() {
     OpenAI.apiKey = widget.token;
+    debugPrint("token = ${widget.token}");
     super.initState();
   }
 
@@ -53,62 +54,65 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
 
     return Scaffold(
-        body: Chat(
-      theme: chatTheme,
-      messages: _messages,
-      onSendPressed: _handleSendPressed,
-      showUserNames: true,
-      showUserAvatars: false,
-      user: _user,
-      useTopSafeAreaInset: true,
-      customBottomWidget: Column(children: [
-        Container(
-          color: ChatGptColors.menu,
-          height: 40,
-          child: Row(
-            children: [const Spacer(), _createSegment()],
+        body: SafeArea(
+      maintainBottomViewPadding: true,
+      child: Chat(
+        theme: chatTheme,
+        messages: _messages,
+        onSendPressed: _handleSendPressed,
+        showUserNames: true,
+        showUserAvatars: false,
+        user: _user,
+        useTopSafeAreaInset: true,
+        customBottomWidget: Column(children: [
+          Container(
+            color: ChatGptColors.menu,
+            height: 46,
+            child: Row(
+              children: [const Spacer(), _createSegment()],
+            ),
           ),
-        ),
-        Container(
-          height: 0.5,
-          color: ChatGptColors.middleMenu,
-        ),
-        Input(
-          // isAttachmentUploading: widget.isAttachmentUploading,
-          // onAttachmentPressed: widget.onAttachmentPressed,
-          onSendPressed: _handleSendPressed,
-          options: const InputOptions(),
-        ),
-      ]),
-      onMessageDoubleTap: (context, message) {
-        if (message is types.TextMessage) {
-          if (message.author.id != _user.id) {
-            var data = ClipboardData(text: message.text);
-            Clipboard.setData(data);
-          } else {}
-        }
-      },
-      onMessageTap: (context, message) async {
-        debugPrint(message.type.toString());
-        if (message is types.TextMessage) {
-          debugPrint('start speak');
-          await flutterTts.stop();
-          if (_currentSelection == 0) {
-            await flutterTts.setLanguage('zh-CN');
-          } else if (_currentSelection == 1) {
-            await flutterTts.setLanguage('ja-JP');
-          } else if (_currentSelection == 2) {
-            await flutterTts.setLanguage('en-US');
+          Container(
+            height: 0.5,
+            color: ChatGptColors.middleMenu,
+          ),
+          Input(
+            // isAttachmentUploading: widget.isAttachmentUploading,
+            // onAttachmentPressed: widget.onAttachmentPressed,
+            onSendPressed: _handleSendPressed,
+            options: const InputOptions(),
+          ),
+        ]),
+        onMessageDoubleTap: (context, message) {
+          if (message is types.TextMessage) {
+            if (message.author.id != _user.id) {
+              var data = ClipboardData(text: message.text);
+              Clipboard.setData(data);
+            } else {}
           }
-          var result = await flutterTts.speak(message.text);
-          debugPrint('speak result = $result');
-          if (message.author.id != _user.id) {
-          } else {
-            var data = ClipboardData(text: message.text);
-            Clipboard.setData(data);
+        },
+        onMessageTap: (context, message) async {
+          debugPrint(message.type.toString());
+          if (message is types.TextMessage) {
+            debugPrint('start speak');
+            await flutterTts.stop();
+            if (_currentSelection == 0) {
+              await flutterTts.setLanguage('zh-CN');
+            } else if (_currentSelection == 1) {
+              await flutterTts.setLanguage('ja-JP');
+            } else if (_currentSelection == 2) {
+              await flutterTts.setLanguage('en-US');
+            }
+            var result = await flutterTts.speak(message.text);
+            debugPrint('speak result = $result');
+            if (message.author.id != _user.id) {
+            } else {
+              var data = ClipboardData(text: message.text);
+              Clipboard.setData(data);
+            }
           }
-        }
-      },
+        },
+      ),
     ));
   }
 
