@@ -1,5 +1,7 @@
 {
     "cSpell.words": [
+        "cupertino",
         "openai"
-    ]
+    ],
+    "cmake.configureOnOpen": true
 }

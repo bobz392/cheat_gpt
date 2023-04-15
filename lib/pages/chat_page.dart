@@ -83,16 +83,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             options: const InputOptions(),
           ),
         ]),
-        onMessageDoubleTap: (context, message) {
-          if (message is types.TextMessage) {
-            if (message.author.id != _user.id) {
-              var data = ClipboardData(text: message.text);
-              Clipboard.setData(data);
-            } else {}
-          }
-        },
+        onMessageDoubleTap: (context, message) {},
         onMessageTap: (context, message) async {
-          debugPrint(message.type.toString());
           if (message is types.TextMessage) {
             debugPrint('start speak');
             await flutterTts.stop();
@@ -103,13 +95,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             } else if (_currentSelection == 2) {
               await flutterTts.setLanguage('en-US');
             }
-            var result = await flutterTts.speak(message.text);
+            var result = flutterTts.speak(message.text);
             debugPrint('speak result = $result');
-            if (message.author.id != _user.id) {
-            } else {
-              var data = ClipboardData(text: message.text);
-              Clipboard.setData(data);
-            }
+            var data = ClipboardData(text: message.text);
+            Clipboard.setData(data);
+          } else if (message is types.ImageMessage) {
+            var data = ClipboardData(text: message.uri);
+            debugPrint(message.metadata.toString() ?? 'none');
+            Clipboard.setData(data);
           }
         },
       ),
