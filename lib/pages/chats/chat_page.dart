@@ -1,15 +1,18 @@
 import 'package:dart_openai/openai.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:material_segmented_control/material_segmented_control.dart';
+import 'package:macos_ui/macos_ui.dart';
+// import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:my_chat_gpt/provider/user_token_provider.dart';
 import 'package:my_chat_gpt/utils/gpt_colors.dart';
 import 'package:uuid/uuid.dart';
+
+import 'chat_types.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   final String token;
@@ -30,7 +33,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       firstName: 'Chat-GPT(tap to speak)');
   final _uuid = const Uuid();
   final flutterTts = FlutterTts();
-  int _currentSelection = 0;
+  final tabController = MacosTabController(initialIndex: 0, length: 5);
 
   @override
   void initState() {
@@ -48,8 +51,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   @override
   Widget build(BuildContext context) {
     const chatTheme = DefaultChatTheme(
-      backgroundColor: ChatGptColors.mainBlack,
-      inputBackgroundColor: ChatGptColors.secondaryBlack,
+      backgroundColor: GptColors.mainBlack,
+      inputBackgroundColor: GptColors.secondaryBlack,
       inputBorderRadius: BorderRadius.zero,
     );
 
@@ -66,15 +69,18 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         useTopSafeAreaInset: true,
         customBottomWidget: Column(children: [
           Container(
-            color: ChatGptColors.menu,
-            height: 46,
+            color: GptColors.mainBlack,
             child: Row(
-              children: [const Spacer(), _createSegment()],
+              children: [
+                const Spacer(),
+                _createSegment(),
+                const SizedBox(width: 30)
+              ],
             ),
           ),
           Container(
             height: 0.5,
-            color: ChatGptColors.middleMenu,
+            color: GptColors.middleMenu,
           ),
           Input(
             // isAttachmentUploading: widget.isAttachmentUploading,
@@ -88,12 +94,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           if (message is types.TextMessage) {
             debugPrint('start speak');
             await flutterTts.stop();
-            if (_currentSelection == 0) {
-              await flutterTts.setLanguage('zh-CN');
-            } else if (_currentSelection == 1) {
-              await flutterTts.setLanguage('ja-JP');
-            } else if (_currentSelection == 2) {
-              await flutterTts.setLanguage('en-US');
+            final chatType = tabController.index.toChatType;
+            final tts = chatType.ttsLanguage;
+            if (tts != null) {
+              await flutterTts.setLanguage(tts);
             }
             var result = flutterTts.speak(message.text);
             debugPrint('speak result = $result');
@@ -101,7 +105,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             Clipboard.setData(data);
           } else if (message is types.ImageMessage) {
             var data = ClipboardData(text: message.uri);
-            debugPrint(message.metadata.toString() ?? 'none');
+            debugPrint(message.metadata.toString());
             Clipboard.setData(data);
           }
         },
@@ -128,14 +132,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
 
     _addMessage(textMessage);
-
-    if (_currentSelection == 0) {
+    if (tabController.index == 0) {
       _sendAI('翻译成中文: ${message.text}');
-    } else if (_currentSelection == 1) {
+    } else if (tabController.index == 1) {
       _sendAI('翻译成日语: ${message.text}');
-    } else if (_currentSelection == 2) {
+    } else if (tabController.index == 2) {
       _sendAI('翻译成英语: ${message.text}');
-    } else if (_currentSelection == 4) {
+    } else if (tabController.index == 4) {
       _sendImage(message.text);
     } else {
       _sendAI(message.text);
@@ -143,31 +146,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 
   Widget _createSegment() {
-    const Map<int, Widget> children = {
-      0: Text(' Cn '),
-      1: Text(' Jap '),
-      2: Text(' English '),
-      3: Text(' Chat '),
-      4: Text(' Image '),
-    };
-    return MaterialSegmentedControl(
-      children: children,
-      selectionIndex: _currentSelection,
-      selectedColor: ChatGptColors.menu,
-      unselectedColor: ChatGptColors.middleMenu,
-      selectedTextStyle: const TextStyle(
-        color: Colors.white,
-        fontSize: 14,
-      ),
-      unselectedTextStyle: const TextStyle(
-        color: ChatGptColors.mainPurple,
-        fontSize: 14,
-      ),
-      onSegmentTapped: (index) {
-        setState(() {
-          _currentSelection = index;
-        });
-      },
+    final tabs = ChatType.values
+        .map((value) => MacosTab(label: value.displayName, active: false))
+        .toList();
+
+    return MacosSegmentedControl(
+      tabs: tabs,
+      controller: tabController,
     );
   }
 
@@ -177,7 +162,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         prompt: prompt,
         n: 1,
         size: OpenAIImageSize.size1024,
-        responseFormat: OpenAIResponseFormat.url,
+        responseFormat: OpenAIImageResponseFormat.url,
       );
 
       final imageMessage = types.ImageMessage(
@@ -185,7 +170,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           id: _uuid.v4(),
           name: prompt,
           size: 1024 * 1024,
-          uri: image.data.first.url);
+          uri: image.data.first.url ?? '');
       _addMessage(imageMessage);
     } catch (error) {
       _addErrorMessage(error);
@@ -194,11 +179,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   void _sendAI(String prompt) async {
     try {
+      const role = OpenAIChatMessageRole.user;
       OpenAIChatCompletionModel chatCompletion =
           await OpenAI.instance.chat.create(
         model: "gpt-3.5-turbo",
         messages: [
-          OpenAIChatCompletionChoiceMessageModel(content: prompt, role: 'user'),
+          OpenAIChatCompletionChoiceMessageModel(content: prompt, role: role),
         ],
       );
       debugPrint(chatCompletion.usage.toString());

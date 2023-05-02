@@ -22,7 +22,7 @@ class ChatGptTokenNotifier extends StateNotifier<String?> {
       File file = await ChatGptKeys.tokenKey._getLocalFile();
       state = await file.readAsString();
     } catch (error) {
-      state = null;
+      state = '';
     }
   }
 

@@ -33,7 +33,7 @@ class _SaveTokenPageState extends ConsumerState<SaveTokenPage> {
         const Text(
           'Enter your token to use',
           style: TextStyle(
-            color: ChatGptColors.subTitle,
+            color: GptColors.subTitle,
             fontSize: 16,
           ),
         ),
@@ -47,7 +47,7 @@ class _SaveTokenPageState extends ConsumerState<SaveTokenPage> {
             child: const Text(
               "Where to find?",
               style: TextStyle(
-                color: ChatGptColors.link,
+                color: GptColors.link,
                 fontSize: 12,
               ),
             )),
@@ -59,17 +59,17 @@ class _SaveTokenPageState extends ConsumerState<SaveTokenPage> {
           decoration: const BoxDecoration(
               border: Border(
             bottom: BorderSide(
-              color: ChatGptColors.mainPurple,
+              color: GptColors.mainPurple,
             ),
           )),
           child: TextField(
-            cursorColor: ChatGptColors.mainPurple,
+            cursorColor: GptColors.mainPurple,
             keyboardType: TextInputType.text,
             controller: _textController,
             decoration: const InputDecoration(
               hintText: 'your token. start with sk...',
               focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: ChatGptColors.mainPurple)),
+                  borderSide: BorderSide(color: GptColors.mainPurple)),
             ),
           ),
         ),
@@ -80,7 +80,7 @@ class _SaveTokenPageState extends ConsumerState<SaveTokenPage> {
             child: ElevatedButton(
               style: ButtonStyle(
                 backgroundColor: MaterialStateColor.resolveWith(
-                    (states) => ChatGptColors.mainPurple),
+                    (states) => GptColors.mainPurple),
               ),
               onPressed: () {
                 var token = _textController.text;

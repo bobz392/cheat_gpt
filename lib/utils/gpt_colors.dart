@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class ChatGptColors {
+class GptColors {
   /// page colors
   static const Color mainBlack = Color(0xff2b2c32);
   static const Color secondaryBlack = Color(0xff36373f);
@@ -14,10 +14,3 @@ class ChatGptColors {
   /// widget colors
   static const Color searchBar = Color(0xff202020);
 }
-
-final chatGptTheme = ThemeData(
-  brightness: Brightness.dark,
-  primaryColor: ChatGptColors.mainBlack,
-  cardColor: ChatGptColors.secondaryBlack,
-  // fontFamily: 'RooneySans',
-);

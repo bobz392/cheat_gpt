@@ -2,11 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:my_chat_gpt/pages/chat_page.dart';
-import 'package:my_chat_gpt/pages/save_token_page.dart';
+import 'package:macos_ui/macos_ui.dart';
+import 'package:my_chat_gpt/pages/chats/chat_page.dart';
+import 'package:my_chat_gpt/pages/token/save_token_page.dart';
+import 'package:my_chat_gpt/pages/users/users_page.dart';
 import 'package:my_chat_gpt/provider/user_token_provider.dart';
 
-import 'package:my_chat_gpt/utils/gpt_colors.dart';
+import 'package:my_chat_gpt/utils/gpt_theme.dart';
+import 'package:my_chat_gpt/widgets/loading_widget.dart';
+import 'package:my_chat_gpt/widgets/splite_view_widget.dart';
 import 'package:window_size/window_size.dart';
 
 void main() {
@@ -25,14 +29,30 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final token = ref.watch(tokenProvider);
-    return MaterialApp(
-      theme: chatGptTheme,
-      debugShowCheckedModeBanner: false,
-      home: token == null
-          ? const SaveTokenPage()
-          : ChatPage(
+    return MacosApp(
+        theme: MacosThemeData.light(),
+        darkTheme: MacosThemeData.dark(),
+        themeMode: ThemeMode.light,
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: _tokenWidget(token),
+        ));
+  }
+
+  Widget _tokenWidget(String? token) {
+    // null was unknown status, need reading token from file
+    if (token == null) {
+      return const LoadingWidget();
+    } else {
+      if (token.isNotEmpty) {
+        return SplitView(
+            middle: const UsersWidget(),
+            content: ChatPage(
               token: token,
-            ),
-    );
+            ));
+      } else {
+        return const SaveTokenPage();
+      }
+    }
   }
 }
