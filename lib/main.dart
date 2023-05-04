@@ -7,6 +7,7 @@ import 'package:my_chat_gpt/pages/chats/chat_page.dart';
 import 'package:my_chat_gpt/pages/token/save_token_page.dart';
 import 'package:my_chat_gpt/pages/users/users_page.dart';
 import 'package:my_chat_gpt/provider/user_token_provider.dart';
+import 'package:my_chat_gpt/utils/gpt_colors.dart';
 
 import 'package:my_chat_gpt/widgets/loading_widget.dart';
 import 'package:my_chat_gpt/widgets/split_view_widget.dart';
@@ -15,14 +16,14 @@ import 'package:window_size/window_size.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await windowManager.ensureInitialized();
+  // config window for desktop
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    await windowManager.ensureInitialized();
     setWindowTitle('daydayup');
-    WindowOptions windowOptions = const WindowOptions(
-      size: Size(1100, 700),
-      minimumSize: Size(1100, 700),
-      center: true,
-      backgroundColor: Colors.transparent,
+    WindowOptions windowOptions = WindowOptions(
+      size: const Size(1100, 700),
+      minimumSize: const Size(1100, 700),
+      backgroundColor: GptColors.mainBlack.withOpacity(0.4),
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.normal,
       windowButtonVisibility: true,
