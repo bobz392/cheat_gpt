@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../utils/gpt_theme.dart';
-
 class SplitView extends StatelessWidget {
   const SplitView({
     Key? key,

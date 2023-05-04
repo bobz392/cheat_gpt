@@ -7,14 +7,14 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:macos_ui/macos_ui.dart';
+import 'package:my_chat_gpt/pages/chats/chat_types.dart';
 import 'package:my_chat_gpt/provider/prompt_provider.dart';
 // import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:my_chat_gpt/provider/user_token_provider.dart';
 import 'package:my_chat_gpt/utils/gpt_colors.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../widgets/prompt_list_widget.dart';
-import 'chat_types.dart';
+import 'package:my_chat_gpt/widgets/prompt_list_widget.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   final String token;

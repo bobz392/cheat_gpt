@@ -8,16 +8,29 @@ import 'package:my_chat_gpt/pages/token/save_token_page.dart';
 import 'package:my_chat_gpt/pages/users/users_page.dart';
 import 'package:my_chat_gpt/provider/user_token_provider.dart';
 
-import 'package:my_chat_gpt/utils/gpt_theme.dart';
 import 'package:my_chat_gpt/widgets/loading_widget.dart';
-import 'package:my_chat_gpt/widgets/splite_view_widget.dart';
+import 'package:my_chat_gpt/widgets/split_view_widget.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     setWindowTitle('daydayup');
-    setWindowMinSize(const Size(1100, 700));
+    WindowOptions windowOptions = const WindowOptions(
+      size: Size(1100, 700),
+      minimumSize: Size(1100, 700),
+      center: true,
+      backgroundColor: Colors.transparent,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.normal,
+      windowButtonVisibility: true,
+    );
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
   }
 
   runApp(const ProviderScope(child: MyApp()));

@@ -21,7 +21,8 @@ dependencies:
   url_launcher: ^6.1.10
   uuid: ^3.0.6
   csv: ^5.0.2
-
+  
+  window_manager: ^0.3.2
   window_size:
     git:
       url: git://github.com/google/flutter-desktop-embedding.git

@@ -27,7 +27,7 @@ class PromptListWidget extends ConsumerWidget {
         child: ListView.separated(
             itemBuilder: (context, index) {
               return Container(
-                padding: EdgeInsets.symmetric(vertical: 5),
+                padding: const EdgeInsets.symmetric(vertical: 5),
                 color: GptColors.secondaryBlack
                     .withOpacity(index % 2 == 0 ? 0.4 : 0.3),
                 child: TextButton(
