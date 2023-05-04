@@ -34,8 +34,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       id: '82091008-a484-4a29-ae75-a22bf8d6f3ac',
       firstName: 'Chat-GPT(tap to speak)');
   final _uuid = const Uuid();
-  final flutterTts = FlutterTts();
-  final tabController = MacosTabController(initialIndex: 0, length: 5);
+  final _flutterTts = FlutterTts();
+  final _tabController = MacosTabController(initialIndex: 0, length: 5);
+  final _textEditingController = TextEditingController();
 
   @override
   void initState() {
@@ -47,11 +48,18 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   @override
   void dispose() {
     super.dispose();
-    flutterTts.stop();
+    _tabController.dispose();
+    _textEditingController.dispose();
+    _flutterTts.stop();
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(selectPromptProvider, (previous, next) {
+      if (next.isNotEmpty) {
+        _textEditingController.text = next;
+      }
+    });
     const chatTheme = DefaultChatTheme(
       backgroundColor: GptColors.mainBlack,
       inputBackgroundColor: GptColors.secondaryBlack,
@@ -95,7 +103,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
 
     _addMessage(textMessage);
-    final chatType = tabController.index.toChatType;
+    final chatType = _tabController.index.toChatType;
     if (chatType == ChatType.cn) {
       _sendAI('Translate the following text into Chinese: ${message.text}');
     } else if (chatType == ChatType.jap) {
@@ -107,6 +115,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     } else {
       _sendAI(message.text);
     }
+    ref.read(selectPromptProvider.notifier).update((state) => '');
   }
 
   Widget _createSegment() {
@@ -116,7 +125,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     return MacosSegmentedControl(
       tabs: tabs,
-      controller: tabController,
+      controller: _tabController,
     );
   }
 
@@ -177,13 +186,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   void _chatTap(BuildContext context, types.Message message) async {
     if (message is types.TextMessage) {
       debugPrint('start speak');
-      await flutterTts.stop();
-      final chatType = tabController.index.toChatType;
+      await _flutterTts.stop();
+      final chatType = _tabController.index.toChatType;
       final tts = chatType.ttsLanguage;
       if (tts != null) {
-        await flutterTts.setLanguage(tts);
+        await _flutterTts.setLanguage(tts);
       }
-      var result = flutterTts.speak(message.text);
+      var result = _flutterTts.speak(message.text);
       debugPrint('speak result = $result');
       var data = ClipboardData(text: message.text);
       Clipboard.setData(data);
@@ -212,13 +221,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         color: GptColors.middleMenu,
       ),
       Input(
-        // isAttachmentUploading: widget.isAttachmentUploading,
-        // onAttachmentPressed: widget.onAttachmentPressed,
         onSendPressed: _handleSendPressed,
         options: InputOptions(
+          textEditingController: _textEditingController,
           onTextChanged: (text) {
             debugPrint('text -> $text');
-            if (tabController.index.toChatType == ChatType.chat &&
+            if (_tabController.index.toChatType == ChatType.chat &&
                 text.startsWith('/') &&
                 text.length == 1) {
               // show menu
