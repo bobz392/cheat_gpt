@@ -11,9 +11,9 @@ import 'package:my_chat_gpt/provider/prompt_provider.dart';
 // import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:my_chat_gpt/provider/user_token_provider.dart';
 import 'package:my_chat_gpt/utils/gpt_colors.dart';
-import 'package:my_chat_gpt/widgets/loading_widget.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../widgets/prompt_list_widget.dart';
 import 'chat_types.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
@@ -245,56 +245,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       barrierColor: GptColors.secondaryBlack.withOpacity(0.3),
       builder: (context) {
         return const MacosSheet(
-          child: PromptWidget(),
+          child: PromptListWidget(),
         );
       },
     );
-  }
-}
-
-class PromptWidget extends ConsumerWidget {
-  const PromptWidget({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final prompts = ref.watch(promptsProvider);
-    return prompts.when(loading: () {
-      debugPrint('loading');
-      return const LoadingWidget();
-    }, error: (err, stack) {
-      return TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text('Error: $err'));
-    }, data: (prompts) {
-      debugPrint('${prompts.length}');
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: ListView.separated(
-            itemBuilder: (context, index) {
-              return Container(
-                color: index % 2 == 0 ? Colors.blue : Colors.amber,
-                child: TextButton(
-                  child: Text(
-                      '[${prompts[index].first}] ${prompts[index].last}',
-                      style: const TextStyle(color: Colors.white)),
-                  onPressed: () {
-                    if (index != 0) {
-                      ref
-                          .read(selectPromptProvider.notifier)
-                          .update((prompt) => prompts[index].last);
-                    }
-                    Navigator.of(context).pop();
-                  },
-                ),
-              );
-            },
-            separatorBuilder: (context, index) {
-              return const Divider(color: GptColors.middleMenu);
-            },
-            itemCount: prompts.length),
-      );
-    });
   }
 }

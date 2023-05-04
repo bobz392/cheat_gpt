@@ -6,8 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final promptsProvider = FutureProvider<List<List<dynamic>>>((ref) async {
   const path = 'assets/awesome-chatgpt-prompts/prompts.csv';
   final csvData = await rootBundle.loadString(path);
-  final csvTable = const CsvToListConverter(textEndDelimiter: "\"", eol: "\n")
-      .convert(csvData);
+  final csvTable = const CsvToListConverter(eol: "\n").convert(csvData);
+  csvTable.removeAt(0);
   return csvTable;
 });
 
