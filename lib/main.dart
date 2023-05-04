@@ -45,7 +45,6 @@ class MyApp extends ConsumerWidget {
     final token = ref.watch(tokenProvider);
     return MacosApp(
         theme: MacosThemeData.light(),
-        darkTheme: MacosThemeData.dark(),
         themeMode: ThemeMode.light,
         debugShowCheckedModeBanner: false,
         home: Scaffold(

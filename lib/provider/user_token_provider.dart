@@ -30,9 +30,9 @@ class ChatGptTokenNotifier extends StateNotifier<String?> {
     try {
       File file = await ChatGptKeys.tokenKey._getLocalFile();
       await file.delete();
-      state = null;
+      state = '';
     } catch (error) {
-      state = null;
+      state = '';
     }
   }
 
@@ -42,7 +42,7 @@ class ChatGptTokenNotifier extends StateNotifier<String?> {
       await file.writeAsString(address);
       state = address;
     } catch (error) {
-      state = null;
+      state = '';
     }
   }
 }

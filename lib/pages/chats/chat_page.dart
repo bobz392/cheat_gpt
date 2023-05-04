@@ -1,6 +1,7 @@
 import 'package:dart_openai/openai.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
@@ -64,24 +65,29 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       backgroundColor: GptColors.mainBlack,
       inputBackgroundColor: GptColors.secondaryBlack,
       inputBorderRadius: BorderRadius.zero,
+      inputTextStyle: TextStyle(fontFamily: 'RooneySans'),
     );
-    return Scaffold(
-        body: SafeArea(
-      maintainBottomViewPadding: true,
-      child: Chat(
-        theme: chatTheme,
-        messages: _messages,
-        onSendPressed: _handleSendPressed,
-        showUserNames: true,
-        showUserAvatars: false,
-        user: _user,
-        useTopSafeAreaInset: true,
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        customBottomWidget: _chatTypeSegment(),
-        onMessageDoubleTap: (context, message) {},
-        onMessageTap: _chatTap,
-      ),
-    ));
+    return Container(
+        color: GptColors.mainBlack,
+        child: SafeArea(
+          maintainBottomViewPadding: true,
+          child: Chat(
+            theme: chatTheme,
+            messages: _messages,
+            onSendPressed: _handleSendPressed,
+            showUserNames: true,
+            showUserAvatars: false,
+            user: _user,
+            // textMessageBuilder: (type, {required messageWidth, required showName}) {
+            //   return Markdown(data: type.text);
+            // },
+            useTopSafeAreaInset: true,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            customBottomWidget: _chatTypeSegment(),
+            onMessageDoubleTap: (context, message) {},
+            onMessageTap: _chatTap,
+          ),
+        ));
   }
 
   void _addMessage(types.Message message) {

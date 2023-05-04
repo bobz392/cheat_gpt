@@ -7,21 +7,20 @@ environment:
   sdk: '>=2.19.2 <3.0.0'
 
 dependencies:
+  csv: ^5.0.2
+  dart_openai: ^1.9.6
+  # flex_color_scheme: ^7.0.5
   flutter:
     sdk: flutter
-
-  dart_openai: ^1.9.6
-  macos_ui: ^1.12.2
   flutter_chat_ui: ^1.6.6
   flutter_markdown: ^0.6.10+3
   flutter_riverpod: ^2.3.6
   flutter_tts: ^3.6.3
   loading_animation_widget: ^1.2.0+2
+  macos_ui: ^1.12.2
   path_provider: ^2.0.14
   url_launcher: ^6.1.10
   uuid: ^3.0.6
-  csv: ^5.0.2
-  
   window_manager: ^0.3.2
   window_size:
     git:
