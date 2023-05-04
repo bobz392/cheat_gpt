@@ -1,0 +1,3 @@
+[submodule "assets/awesome-chatgpt-prompts"]
+	path = assets/awesome-chatgpt-prompts
+	url = git@github.com:f/awesome-chatgpt-prompts.git

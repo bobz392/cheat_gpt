@@ -7,9 +7,11 @@ import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:macos_ui/macos_ui.dart';
+import 'package:my_chat_gpt/provider/prompt_provider.dart';
 // import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:my_chat_gpt/provider/user_token_provider.dart';
 import 'package:my_chat_gpt/utils/gpt_colors.dart';
+import 'package:my_chat_gpt/widgets/loading_widget.dart';
 import 'package:uuid/uuid.dart';
 
 import 'chat_types.dart';
@@ -27,7 +29,7 @@ class ChatPage extends ConsumerStatefulWidget {
 class _ChatPageState extends ConsumerState<ChatPage> {
   final List<types.Message> _messages = [];
   final _user = const types.User(
-      id: '82091008-a484-4a89-ae75-a22bf8d6f3ac', firstName: 'Xi');
+      id: '82091008-a484-4a89-ae75-a22bf8d6f3ac', firstName: 'coco');
   final _gpt = const types.User(
       id: '82091008-a484-4a29-ae75-a22bf8d6f3ac',
       firstName: 'Chat-GPT(tap to speak)');
@@ -55,7 +57,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       inputBackgroundColor: GptColors.secondaryBlack,
       inputBorderRadius: BorderRadius.zero,
     );
-
     return Scaffold(
         body: SafeArea(
       maintainBottomViewPadding: true,
@@ -67,48 +68,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         showUserAvatars: false,
         user: _user,
         useTopSafeAreaInset: true,
-        customBottomWidget: Column(children: [
-          Container(
-            color: GptColors.mainBlack,
-            child: Row(
-              children: [
-                const Spacer(),
-                _createSegment(),
-                const SizedBox(width: 30)
-              ],
-            ),
-          ),
-          Container(
-            height: 0.5,
-            color: GptColors.middleMenu,
-          ),
-          Input(
-            // isAttachmentUploading: widget.isAttachmentUploading,
-            // onAttachmentPressed: widget.onAttachmentPressed,
-            onSendPressed: _handleSendPressed,
-            options: const InputOptions(),
-          ),
-        ]),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        customBottomWidget: _chatTypeSegment(),
         onMessageDoubleTap: (context, message) {},
-        onMessageTap: (context, message) async {
-          if (message is types.TextMessage) {
-            debugPrint('start speak');
-            await flutterTts.stop();
-            final chatType = tabController.index.toChatType;
-            final tts = chatType.ttsLanguage;
-            if (tts != null) {
-              await flutterTts.setLanguage(tts);
-            }
-            var result = flutterTts.speak(message.text);
-            debugPrint('speak result = $result');
-            var data = ClipboardData(text: message.text);
-            Clipboard.setData(data);
-          } else if (message is types.ImageMessage) {
-            var data = ClipboardData(text: message.uri);
-            debugPrint(message.metadata.toString());
-            Clipboard.setData(data);
-          }
-        },
+        onMessageTap: _chatTap,
       ),
     ));
   }
@@ -132,13 +95,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
 
     _addMessage(textMessage);
-    if (tabController.index == 0) {
-      _sendAI('翻译成中文: ${message.text}');
-    } else if (tabController.index == 1) {
-      _sendAI('翻译成日语: ${message.text}');
-    } else if (tabController.index == 2) {
-      _sendAI('翻译成英语: ${message.text}');
-    } else if (tabController.index == 4) {
+    final chatType = tabController.index.toChatType;
+    if (chatType == ChatType.cn) {
+      _sendAI('Translate the following text into Chinese: ${message.text}');
+    } else if (chatType == ChatType.jap) {
+      _sendAI('Translate the following text into Japanese: ${message.text}');
+    } else if (chatType == ChatType.en) {
+      _sendAI('Translate the following text into English: ${message.text}');
+    } else if (chatType == ChatType.image) {
       _sendImage(message.text);
     } else {
       _sendAI(message.text);
@@ -208,5 +172,121 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         id: _uuid.v4(),
         text: error.toString());
     _addMessage(textMessage);
+  }
+
+  void _chatTap(BuildContext context, types.Message message) async {
+    if (message is types.TextMessage) {
+      debugPrint('start speak');
+      await flutterTts.stop();
+      final chatType = tabController.index.toChatType;
+      final tts = chatType.ttsLanguage;
+      if (tts != null) {
+        await flutterTts.setLanguage(tts);
+      }
+      var result = flutterTts.speak(message.text);
+      debugPrint('speak result = $result');
+      var data = ClipboardData(text: message.text);
+      Clipboard.setData(data);
+    } else if (message is types.ImageMessage) {
+      var data = ClipboardData(text: message.uri);
+      debugPrint(message.metadata.toString());
+      Clipboard.setData(data);
+    }
+  }
+
+  Widget _chatTypeSegment() {
+    return Column(children: [
+      Container(
+        height: 30,
+        color: GptColors.mainBlack,
+        child: Row(
+          children: [
+            const Spacer(),
+            _createSegment(),
+            const SizedBox(width: 30)
+          ],
+        ),
+      ),
+      Container(
+        height: 0.5,
+        color: GptColors.middleMenu,
+      ),
+      Input(
+        // isAttachmentUploading: widget.isAttachmentUploading,
+        // onAttachmentPressed: widget.onAttachmentPressed,
+        onSendPressed: _handleSendPressed,
+        options: InputOptions(
+          onTextChanged: (text) {
+            debugPrint('text -> $text');
+            if (tabController.index.toChatType == ChatType.chat &&
+                text.startsWith('/') &&
+                text.length == 1) {
+              // show menu
+              _showChatPrompts();
+            }
+          },
+        ),
+      ),
+    ]);
+  }
+
+  void _showChatPrompts() {
+    showMacosSheet(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: GptColors.secondaryBlack.withOpacity(0.3),
+      builder: (context) {
+        return const MacosSheet(
+          child: PromptWidget(),
+        );
+      },
+    );
+  }
+}
+
+class PromptWidget extends ConsumerWidget {
+  const PromptWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final prompts = ref.watch(promptsProvider);
+    return prompts.when(loading: () {
+      debugPrint('loading');
+      return const LoadingWidget();
+    }, error: (err, stack) {
+      return TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text('Error: $err'));
+    }, data: (prompts) {
+      debugPrint('${prompts.length}');
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: ListView.separated(
+            itemBuilder: (context, index) {
+              return Container(
+                color: index % 2 == 0 ? Colors.blue : Colors.amber,
+                child: TextButton(
+                  child: Text(
+                      '[${prompts[index].first}] ${prompts[index].last}',
+                      style: const TextStyle(color: Colors.white)),
+                  onPressed: () {
+                    if (index != 0) {
+                      ref
+                          .read(selectPromptProvider.notifier)
+                          .update((prompt) => prompts[index].last);
+                    }
+                    Navigator.of(context).pop();
+                  },
+                ),
+              );
+            },
+            separatorBuilder: (context, index) {
+              return const Divider(color: GptColors.middleMenu);
+            },
+            itemCount: prompts.length),
+      );
+    });
   }
 }
