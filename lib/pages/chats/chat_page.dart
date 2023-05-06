@@ -157,27 +157,67 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 
   void _sendAI(String prompt) async {
-    try {
-      const role = OpenAIChatMessageRole.user;
-      OpenAIChatCompletionModel chatCompletion =
-          await OpenAI.instance.chat.create(
-        model: "gpt-3.5-turbo",
-        messages: [
-          OpenAIChatCompletionChoiceMessageModel(content: prompt, role: role),
-        ],
-      );
-      debugPrint(chatCompletion.usage.toString());
-      final result = chatCompletion.choices.first.message.content;
-      final textMessage = types.TextMessage(
+    var chatStream = OpenAI.instance.chat.createStream(
+      model: "gpt-3.5-turbo",
+      messages: [
+        OpenAIChatCompletionChoiceMessageModel(
+          content: prompt,
+          role: OpenAIChatMessageRole.user,
+        )
+      ],
+    );
+
+    chatStream.listen((chatStreamEvent) {
+      if (chatStreamEvent.choices.first.finishReason != null) {
+        final textMessage = types.TextMessage(
           author: _gpt,
           createdAt: DateTime.now().millisecondsSinceEpoch,
           id: _uuid.v4(),
-          text: result.trim());
-      debugPrint("result = $result");
-      _addMessage(textMessage);
-    } catch (error) {
+          text: _textEditingController.text,
+        );
+        setState(() {
+          _messages.insert(0, textMessage);
+          _textEditingController.text = '';
+        });
+      } else {
+        final partial = chatStreamEvent.choices.first.delta.content;
+        debugPrint(partial);
+        if (partial != null) {
+          setState(() {
+            if (_textEditingController.text.isEmpty) {
+              _textEditingController.text = partial;
+            } else {
+              _textEditingController.text += partial;
+            }
+          });
+        }
+      }
+    }, onError: (error) {
       _addErrorMessage(error);
-    }
+    });
+
+    // try {
+    //   const role = OpenAIChatMessageRole.user;
+    //   OpenAIChatCompletionModel chatCompletion =
+    //       await OpenAI.instance.chat.create(
+    //     model: "gpt-3.5-turbo",
+    //     messages: [
+    //       OpenAIChatCompletionChoiceMessageModel(content: prompt, role: role),
+    //     ],
+    //   );
+    //   debugPrint('chatCompletion.usage: ${chatCompletion.usage}');
+    //   final result = chatCompletion.choices.first.message.content;
+    //   final textMessage = types.TextMessage(
+    //     author: _gpt,
+    //     createdAt: DateTime.now().millisecondsSinceEpoch,
+    //     id: _uuid.v4(),
+    //     text: result.trim(),
+    //   );
+    //   debugPrint("result = $result");
+    //   _addMessage(textMessage);
+    // } catch (error) {
+    //   _addErrorMessage(error);
+    // }
   }
 
   void _addErrorMessage(Object error) {
