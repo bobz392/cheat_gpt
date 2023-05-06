@@ -188,6 +188,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               _textEditingController.text = partial;
             } else {
               _textEditingController.text += partial;
+              _textEditingController.selection = TextSelection.collapsed(
+                  offset: _textEditingController.text.length);
             }
           });
         }
