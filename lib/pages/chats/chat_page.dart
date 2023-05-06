@@ -111,11 +111,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     _addMessage(textMessage);
     final chatType = _tabController.index.toChatType;
     if (chatType == ChatType.cn) {
-      _sendAI('Translate the following text into Chinese: ${message.text}');
+      _sendAI('Translate into Chinese: ${message.text}');
     } else if (chatType == ChatType.jap) {
-      _sendAI('Translate the following text into Japanese: ${message.text}');
+      _sendAI('Translate into Japanese: ${message.text}');
     } else if (chatType == ChatType.en) {
-      _sendAI('Translate the following text into English: ${message.text}');
+      _sendAI('Translate into English: ${message.text}');
     } else if (chatType == ChatType.image) {
       _sendImage(message.text);
     } else {
