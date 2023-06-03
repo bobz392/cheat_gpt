@@ -17,7 +17,10 @@ dependencies:
   flutter_riverpod: ^2.3.6
   flutter_tts: ^3.6.3
   loading_animation_widget: ^1.2.0+2
-  macos_ui: ^1.12.2
+  macos_ui: # ^1.12.2
+    git:
+      url: git@github.com:macosui/macos_ui.git
+      ref: dev
   path_provider: ^2.0.14
   url_launcher: ^6.1.10
   uuid: ^3.0.6

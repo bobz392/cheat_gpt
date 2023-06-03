@@ -17,8 +17,7 @@ class UsersWidget extends ConsumerWidget {
       itemBuilder: (context, index) {
         var userType = userTypes[index];
         return InkWell(
-          child: UserWidget(
-              name: userType.name, info: '', imageURL: userType.avatar),
+          child: UserWidget(name: userType.name, info: ''),
           onTap: () {},
         );
       },

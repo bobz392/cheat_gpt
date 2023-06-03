@@ -9,6 +9,8 @@ import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:macos_ui/macos_ui.dart';
 import 'package:my_chat_gpt/pages/chats/chat_types.dart';
+import 'package:my_chat_gpt/provider/message_provider.dart';
+import 'package:my_chat_gpt/provider/openai_provider.dart';
 import 'package:my_chat_gpt/provider/prompt_provider.dart';
 // import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:my_chat_gpt/provider/user_token_provider.dart';
@@ -36,7 +38,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       firstName: 'Chat-GPT(tap to speak)');
   final _uuid = const Uuid();
   final _flutterTts = FlutterTts();
-  final _tabController = MacosTabController(initialIndex: 0, length: 5);
+  final _chatTypeTabController =
+      MacosTabController(initialIndex: 0, length: ChatType.values.length);
   final _textEditingController = TextEditingController();
 
   @override
@@ -49,7 +52,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   @override
   void dispose() {
     super.dispose();
-    _tabController.dispose();
+    _chatTypeTabController.dispose();
     _textEditingController.dispose();
     _flutterTts.stop();
   }
@@ -61,6 +64,29 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         _textEditingController.text = next;
       }
     });
+    final messages = ref.watch(messagesProvider);
+    ref.listenManual(promptResponseProvider, (previous, next) {
+      if (next != null) {
+        if (next.finish == false) {
+          _textEditingController.text = next.content;
+          _textEditingController.selection =
+              TextSelection.collapsed(offset: next.content.length);
+        } else {
+          final textMessage = types.TextMessage(
+            author: _gpt,
+            createdAt: DateTime.now().millisecondsSinceEpoch,
+            id: _uuid.v4(),
+            text: next.content.trim(),
+          );
+          ref.watch(messagesProvider.notifier).addTextMessage(textMessage);
+          _textEditingController.text = '';
+        }
+        ref.watch(sendEnableProvider.notifier).update((state) => next.finish);
+      }
+    });
+
+    final enableSend = ref.watch(sendEnableProvider);
+
     const chatTheme = DefaultChatTheme(
       backgroundColor: GptColors.mainBlack,
       inputBackgroundColor: GptColors.secondaryBlack,
@@ -73,27 +99,27 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           maintainBottomViewPadding: true,
           child: Chat(
             theme: chatTheme,
-            messages: _messages,
+            messages: messages,
             onSendPressed: _handleSendPressed,
             showUserNames: true,
             showUserAvatars: false,
             user: _user,
-            // textMessageBuilder: (type, {required messageWidth, required showName}) {
-            //   return Markdown(data: type.text);
-            // },
+            onBackgroundTap: () async {
+              await _flutterTts.stop();
+            },
+            // textMessageBuilder: (type,
+            //     {required messageWidth, required showName}) {},
             useTopSafeAreaInset: true,
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            customBottomWidget: _chatTypeSegment(),
-            onMessageDoubleTap: (context, message) {},
+            customBottomWidget: _chatInputWidget(enableSend),
+            // onMessageDoubleTap: (context, message) {},
             onMessageTap: _chatTap,
           ),
         ));
   }
 
   void _addMessage(types.Message message) {
-    setState(() {
-      _messages.insert(0, message);
-    });
+    ref.watch(messagesProvider.notifier).addTextMessage(message);
   }
 
   void _handleSendPressed(types.PartialText message) {
@@ -109,30 +135,19 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
 
     _addMessage(textMessage);
-    final chatType = _tabController.index.toChatType;
+    final chatType = _chatTypeTabController.index.toChatType;
     if (chatType == ChatType.cn) {
-      _sendAI('Translate into Chinese: ${message.text}');
+      _sendPromptToGpt('Translate into Chinese: ${message.text}');
     } else if (chatType == ChatType.jap) {
-      _sendAI('Translate into Japanese: ${message.text}');
+      _sendPromptToGpt('Translate into Japanese: ${message.text}');
     } else if (chatType == ChatType.en) {
-      _sendAI('Translate into English: ${message.text}');
+      _sendPromptToGpt('Translate into English: ${message.text}');
     } else if (chatType == ChatType.image) {
       _sendImage(message.text);
     } else {
-      _sendAI(message.text);
+      _sendPromptToGpt(message.text);
     }
-    ref.read(selectPromptProvider.notifier).update((state) => '');
-  }
-
-  Widget _createSegment() {
-    final tabs = ChatType.values
-        .map((value) => MacosTab(label: value.displayName, active: false))
-        .toList();
-
-    return MacosSegmentedControl(
-      tabs: tabs,
-      controller: _tabController,
-    );
+    ref.watch(selectPromptProvider.notifier).update((state) => '');
   }
 
   void _sendImage(String prompt) async {
@@ -156,70 +171,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
   }
 
-  void _sendAI(String prompt) async {
-    var chatStream = OpenAI.instance.chat.createStream(
-      model: "gpt-3.5-turbo",
-      messages: [
-        OpenAIChatCompletionChoiceMessageModel(
-          content: prompt,
-          role: OpenAIChatMessageRole.user,
-        )
-      ],
-    );
-
-    chatStream.listen((chatStreamEvent) {
-      if (chatStreamEvent.choices.first.finishReason != null) {
-        final textMessage = types.TextMessage(
-          author: _gpt,
-          createdAt: DateTime.now().millisecondsSinceEpoch,
-          id: _uuid.v4(),
-          text: _textEditingController.text,
-        );
-        setState(() {
-          _messages.insert(0, textMessage);
-          _textEditingController.text = '';
-        });
-      } else {
-        final partial = chatStreamEvent.choices.first.delta.content;
-        debugPrint(partial);
-        if (partial != null) {
-          setState(() {
-            if (_textEditingController.text.isEmpty) {
-              _textEditingController.text = partial;
-            } else {
-              _textEditingController.text += partial;
-              _textEditingController.selection = TextSelection.collapsed(
-                  offset: _textEditingController.text.length);
-            }
-          });
-        }
-      }
-    }, onError: (error) {
-      _addErrorMessage(error);
-    });
-
-    // try {
-    //   const role = OpenAIChatMessageRole.user;
-    //   OpenAIChatCompletionModel chatCompletion =
-    //       await OpenAI.instance.chat.create(
-    //     model: "gpt-3.5-turbo",
-    //     messages: [
-    //       OpenAIChatCompletionChoiceMessageModel(content: prompt, role: role),
-    //     ],
-    //   );
-    //   debugPrint('chatCompletion.usage: ${chatCompletion.usage}');
-    //   final result = chatCompletion.choices.first.message.content;
-    //   final textMessage = types.TextMessage(
-    //     author: _gpt,
-    //     createdAt: DateTime.now().millisecondsSinceEpoch,
-    //     id: _uuid.v4(),
-    //     text: result.trim(),
-    //   );
-    //   debugPrint("result = $result");
-    //   _addMessage(textMessage);
-    // } catch (error) {
-    //   _addErrorMessage(error);
-    // }
+  void _sendPromptToGpt(String prompt) async {
+    ref.read(promptResponseProvider.notifier).chatStart(prompt);
   }
 
   void _addErrorMessage(Object error) {
@@ -235,7 +188,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     if (message is types.TextMessage) {
       debugPrint('start speak');
       await _flutterTts.stop();
-      final chatType = _tabController.index.toChatType;
+      final chatType = _chatTypeTabController.index.toChatType;
       final tts = chatType.ttsLanguage;
       if (tts != null) {
         await _flutterTts.setLanguage(tts);
@@ -251,7 +204,18 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
   }
 
-  Widget _chatTypeSegment() {
+  Widget _createSegment() {
+    final tabs = ChatType.values
+        .map((value) => MacosTab(label: value.displayName, active: false))
+        .toList();
+
+    return MacosSegmentedControl(
+      tabs: tabs,
+      controller: _chatTypeTabController,
+    );
+  }
+
+  Widget _chatInputWidget(bool sendEnable) {
     return Column(children: [
       Container(
         height: 30,
@@ -272,9 +236,12 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         onSendPressed: _handleSendPressed,
         options: InputOptions(
           textEditingController: _textEditingController,
+          sendButtonVisibilityMode: sendEnable
+              ? SendButtonVisibilityMode.always
+              : SendButtonVisibilityMode.hidden,
           onTextChanged: (text) {
             debugPrint('text -> $text');
-            if (_tabController.index.toChatType == ChatType.chat &&
+            if (_chatTypeTabController.index.toChatType == ChatType.chat &&
                 text.startsWith('/') &&
                 text.length == 1) {
               // show menu
@@ -282,7 +249,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             }
           },
         ),
-      ),
+      )
     ]);
   }
 
