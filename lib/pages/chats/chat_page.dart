@@ -86,9 +86,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         ref.watch(sendEnableProvider.notifier).update((state) => next.finish);
       }
     });
-
     final enableSend = ref.watch(sendEnableProvider);
-
     const chatTheme = DefaultChatTheme(
       backgroundColor: GptColors.mainBlack,
       inputBackgroundColor: GptColors.secondaryBlack,
@@ -289,7 +287,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           _chatTypeTabController.index = chatType.last.rawValue;
         });
       }
-
       debugPrint('${event.physicalKey}');
       debugPrint('${_focusNode.hasFocus}');
     }
