@@ -16,6 +16,51 @@ extension ChatTypeName on ChatType {
     }
   }
 
+  ChatType get next {
+    switch (this) {
+      case ChatType.cn:
+        return ChatType.jap;
+      case ChatType.en:
+        return ChatType.image;
+      case ChatType.image:
+        return ChatType.image;
+      case ChatType.chat:
+        return ChatType.cn;
+      case ChatType.jap:
+        return ChatType.en;
+    }
+  }
+
+  int get rawValue {
+    switch (this) {
+      case ChatType.cn:
+        return 1;
+      case ChatType.en:
+        return 3;
+      case ChatType.image:
+        return 4;
+      case ChatType.chat:
+        return 0;
+      case ChatType.jap:
+        return 2;
+    }
+  }
+
+  ChatType get last {
+    switch (this) {
+      case ChatType.cn:
+        return ChatType.chat;
+      case ChatType.en:
+        return ChatType.jap;
+      case ChatType.image:
+        return ChatType.en;
+      case ChatType.chat:
+        return ChatType.chat;
+      case ChatType.jap:
+        return ChatType.cn;
+    }
+  }
+
   String buildCommand(String message) {
     switch (this) {
       case ChatType.cn:

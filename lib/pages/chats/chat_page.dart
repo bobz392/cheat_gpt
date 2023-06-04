@@ -30,7 +30,6 @@ class ChatPage extends ConsumerStatefulWidget {
 }
 
 class _ChatPageState extends ConsumerState<ChatPage> {
-  final List<types.Message> _messages = [];
   final _user = const types.User(
       id: '82091008-a484-4a89-ae75-a22bf8d6f3ac', firstName: 'coco');
   final _gpt = const types.User(
@@ -38,6 +37,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       firstName: 'Chat-GPT(tap to speak)');
   final _uuid = const Uuid();
   final _flutterTts = FlutterTts();
+  final _focusNode = FocusNode();
   final _chatTypeTabController =
       MacosTabController(initialIndex: 0, length: ChatType.values.length);
   final _textEditingController = TextEditingController();
@@ -54,6 +54,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     super.dispose();
     _chatTypeTabController.dispose();
     _textEditingController.dispose();
+    _focusNode.dispose();
     _flutterTts.stop();
   }
 
@@ -65,7 +66,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       }
     });
     final messages = ref.watch(messagesProvider);
-    ref.listenManual(promptResponseProvider, (previous, next) {
+    ref.listen(promptResponseProvider, (previous, next) {
       if (next != null) {
         if (next.finish == false) {
           _textEditingController.text = next.content;
@@ -78,7 +79,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             id: _uuid.v4(),
             text: next.content.trim(),
           );
-          ref.watch(messagesProvider.notifier).addTextMessage(textMessage);
+          debugPrint('add message when end');
+          ref.read(messagesProvider.notifier).addTextMessage(textMessage);
           _textEditingController.text = '';
         }
         ref.watch(sendEnableProvider.notifier).update((state) => next.finish);
@@ -93,29 +95,33 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       inputBorderRadius: BorderRadius.zero,
       inputTextStyle: TextStyle(fontFamily: 'RooneySans'),
     );
-    return Container(
-        color: GptColors.mainBlack,
-        child: SafeArea(
-          maintainBottomViewPadding: true,
-          child: Chat(
-            theme: chatTheme,
-            messages: messages,
-            onSendPressed: _handleSendPressed,
-            showUserNames: true,
-            showUserAvatars: false,
-            user: _user,
-            onBackgroundTap: () async {
-              await _flutterTts.stop();
-            },
-            // textMessageBuilder: (type,
-            //     {required messageWidth, required showName}) {},
-            useTopSafeAreaInset: true,
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            customBottomWidget: _chatInputWidget(enableSend),
-            // onMessageDoubleTap: (context, message) {},
-            onMessageTap: _chatTap,
-          ),
-        ));
+    return RawKeyboardListener(
+      focusNode: _focusNode,
+      onKey: _onKeyEvent,
+      child: Container(
+          color: GptColors.mainBlack,
+          child: SafeArea(
+            maintainBottomViewPadding: true,
+            child: Chat(
+              theme: chatTheme,
+              messages: messages,
+              onSendPressed: _handleSendPressed,
+              showUserNames: true,
+              showUserAvatars: false,
+              user: _user,
+              onBackgroundTap: () async {
+                await _flutterTts.stop();
+              },
+              // textMessageBuilder: (type,
+              //     {required messageWidth, required showName}) {},
+              useTopSafeAreaInset: true,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              customBottomWidget: _chatInputWidget(enableSend),
+              // onMessageDoubleTap: (context, message) {},
+              onMessageTap: _chatTap,
+            ),
+          )),
+    );
   }
 
   void _addMessage(types.Message message) {
@@ -127,26 +133,30 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       ref.read(tokenProvider.notifier).removeToken();
       return;
     }
+    String prompt;
+    final chatType = _chatTypeTabController.index.toChatType;
+    if (chatType == ChatType.cn) {
+      prompt = 'Translate into Chinese: ${message.text}';
+    } else if (chatType == ChatType.jap) {
+      prompt = 'Translate into Japanese: ${message.text}';
+    } else if (chatType == ChatType.en) {
+      prompt = 'Translate into English: ${message.text}';
+    } else if (chatType == ChatType.image) {
+      _sendImage(message.text);
+      return;
+    } else {
+      prompt = message.text;
+    }
+    _sendPromptToGpt(prompt);
+    // add my prompt message
     final textMessage = types.TextMessage(
       author: _user,
       createdAt: DateTime.now().millisecondsSinceEpoch,
       id: _uuid.v4(),
-      text: message.text.trim(),
+      text: prompt.trim(),
     );
-
     _addMessage(textMessage);
-    final chatType = _chatTypeTabController.index.toChatType;
-    if (chatType == ChatType.cn) {
-      _sendPromptToGpt('Translate into Chinese: ${message.text}');
-    } else if (chatType == ChatType.jap) {
-      _sendPromptToGpt('Translate into Japanese: ${message.text}');
-    } else if (chatType == ChatType.en) {
-      _sendPromptToGpt('Translate into English: ${message.text}');
-    } else if (chatType == ChatType.image) {
-      _sendImage(message.text);
-    } else {
-      _sendPromptToGpt(message.text);
-    }
+    // clear select prompt
     ref.watch(selectPromptProvider.notifier).update((state) => '');
   }
 
@@ -240,7 +250,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               ? SendButtonVisibilityMode.always
               : SendButtonVisibilityMode.hidden,
           onTextChanged: (text) {
-            debugPrint('text -> $text');
+            debugPrint('onTextChanged -> $text');
             if (_chatTypeTabController.index.toChatType == ChatType.chat &&
                 text.startsWith('/') &&
                 text.length == 1) {
@@ -264,5 +274,24 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         );
       },
     );
+  }
+
+  void _onKeyEvent(RawKeyEvent event) {
+    if (event.runtimeType == RawKeyDownEvent) {
+      final chatType = _chatTypeTabController.index.toChatType;
+
+      if (event.physicalKey == PhysicalKeyboardKey.arrowRight) {
+        setState(() {
+          _chatTypeTabController.index = chatType.next.rawValue;
+        });
+      } else if (event.physicalKey == PhysicalKeyboardKey.arrowLeft) {
+        setState(() {
+          _chatTypeTabController.index = chatType.last.rawValue;
+        });
+      }
+
+      debugPrint('${event.physicalKey}');
+      debugPrint('${_focusNode.hasFocus}');
+    }
   }
 }
