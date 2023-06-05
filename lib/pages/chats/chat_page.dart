@@ -1,10 +1,10 @@
 import 'package:dart_openai/openai.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:macos_ui/macos_ui.dart';
@@ -12,7 +12,6 @@ import 'package:my_chat_gpt/pages/chats/chat_types.dart';
 import 'package:my_chat_gpt/provider/message_provider.dart';
 import 'package:my_chat_gpt/provider/openai_provider.dart';
 import 'package:my_chat_gpt/provider/prompt_provider.dart';
-// import 'package:material_segmented_control/material_segmented_control.dart';
 import 'package:my_chat_gpt/provider/user_token_provider.dart';
 import 'package:my_chat_gpt/utils/gpt_colors.dart';
 import 'package:uuid/uuid.dart';
@@ -37,7 +36,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       firstName: 'Chat-GPT(tap to speak)');
   final _uuid = const Uuid();
   final _flutterTts = FlutterTts();
-  final _focusNode = FocusNode();
   final _chatTypeTabController =
       MacosTabController(initialIndex: 0, length: ChatType.values.length);
   final _textEditingController = TextEditingController();
@@ -54,7 +52,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     super.dispose();
     _chatTypeTabController.dispose();
     _textEditingController.dispose();
-    _focusNode.dispose();
     _flutterTts.stop();
   }
 
@@ -79,7 +76,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             id: _uuid.v4(),
             text: next.content.trim(),
           );
-          debugPrint('add message when end');
           ref.read(messagesProvider.notifier).addTextMessage(textMessage);
           _textEditingController.text = '';
         }
@@ -94,7 +90,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       inputTextStyle: TextStyle(fontFamily: 'RooneySans'),
     );
     return RawKeyboardListener(
-      focusNode: _focusNode,
+      focusNode: FocusNode(),
       onKey: _onKeyEvent,
       child: Container(
           color: GptColors.mainBlack,
@@ -107,18 +103,79 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               showUserNames: true,
               showUserAvatars: false,
               user: _user,
-              onBackgroundTap: () async {
-                await _flutterTts.stop();
+              onBackgroundTap: () {
+                _flutterTts.stop();
               },
-              // textMessageBuilder: (type,
-              //     {required messageWidth, required showName}) {},
               useTopSafeAreaInset: true,
+              textMessageBuilder: _textMessageBuild,
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               customBottomWidget: _chatInputWidget(enableSend),
               // onMessageDoubleTap: (context, message) {},
               onMessageTap: _chatTap,
             ),
           )),
+    );
+  }
+
+  MatchText get codeMatcher {
+    final codePattern = PatternStyle(
+        '```',
+        RegExp('```[a-z]*\\n[\\s\\S]*?\n``[`]?'),
+        '',
+        const TextStyle(
+          fontFamily: 'RooneySans',
+        ));
+    return MatchText(
+        pattern: codePattern.pattern,
+        style: codePattern.textStyle,
+        renderText: ({required String str, required String pattern}) {
+          debugPrint('codeMatcher ${codePattern.textStyle}');
+          var lines = str.split('\n');
+          lines.removeLast();
+          if (lines.isNotEmpty) {
+            lines.removeAt(0);
+          }
+          return {
+            'display': lines.join('\n'),
+          };
+        });
+  }
+
+  MatchText get commentMatcher {
+    final codePattern = PatternStyle(
+        '#',
+        RegExp('\\s*//.*\\s'),
+        '#',
+        const TextStyle(
+          fontFamily: 'RooneySans',
+          color: Color(0xff008100),
+          fontWeight: FontWeight.w300,
+        ));
+    return MatchText(
+        pattern: codePattern.pattern,
+        style: codePattern.textStyle,
+        renderText: ({required String str, required String pattern}) {
+          debugPrint('commentMatcher $str');
+          return {
+            'display': str,
+          };
+        });
+  }
+
+  TextMessage _textMessageBuild(message,
+      {required int messageWidth, required bool showName}) {
+    return TextMessage(
+      emojiEnlargementBehavior: EmojiEnlargementBehavior.never,
+      hideBackgroundOnEmojiMessages: true,
+      message: message,
+      showName: showName,
+      usePreviewData: false,
+      options: TextMessageOptions(
+        matchers: [
+          // commentMatcher, // TODO: comment matcher
+          codeMatcher,
+        ],
+      ),
     );
   }
 
@@ -248,7 +305,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               ? SendButtonVisibilityMode.always
               : SendButtonVisibilityMode.hidden,
           onTextChanged: (text) {
-            debugPrint('onTextChanged -> $text');
+            // debugPrint('onTextChanged -> $text');
             if (_chatTypeTabController.index.toChatType == ChatType.chat &&
                 text.startsWith('/') &&
                 text.length == 1) {
@@ -288,7 +345,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         });
       }
       debugPrint('${event.physicalKey}');
-      debugPrint('${_focusNode.hasFocus}');
     }
   }
 }

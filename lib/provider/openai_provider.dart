@@ -76,7 +76,6 @@ class GptPromptResponseNotifier extends StateNotifier<PromptResponse?> {
     // listen to stream
     chatStream.listen((chatStreamEvent) {
       final partial = chatStreamEvent.choices.first.delta.content;
-      debugPrint('partial -> $partial');
       if (partial != null) {
         content += partial;
       }
