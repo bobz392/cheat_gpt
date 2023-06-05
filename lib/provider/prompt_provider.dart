@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:csv/csv.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
@@ -13,4 +15,11 @@ final promptsProvider = FutureProvider<List<List<dynamic>>>((ref) async {
 
 final selectPromptProvider = StateProvider<String>((ref) {
   return '';
+});
+
+final zhPromptsProvider = FutureProvider<List<dynamic>>((ref) async {
+  const path = 'assets/awesome-chatgpt-prompts-zh/prompts-zh.json';
+  final jsonString = await rootBundle.loadString(path);
+  final zhJson = json.decode(jsonString);
+  return zhJson;
 });

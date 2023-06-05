@@ -40,6 +40,7 @@ flutter:
 
   assets:
     - assets/awesome-chatgpt-prompts/prompts.csv
+    - assets/awesome-chatgpt-prompts-zh/prompts-zh.json
 
   fonts:
     - family: RooneySans
