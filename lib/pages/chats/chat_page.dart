@@ -1,10 +1,10 @@
-import 'package:dart_openai/openai.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
+import 'package:dart_openai/dart_openai.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:macos_ui/macos_ui.dart';

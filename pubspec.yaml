@@ -8,16 +8,14 @@ environment:
 
 dependencies:
   csv: ^5.0.2
-  dart_openai: ^1.9.6
-  # flex_color_scheme: ^7.0.5
+  dart_openai: ^2.0.1
   flutter:
     sdk: flutter
-  flutter_chat_ui: ^1.6.6
-  # flutter_markdown: ^0.6.10+3
+  flutter_chat_ui: ^1.6.8
   flutter_riverpod: ^2.3.6
   flutter_tts: ^3.6.3
   loading_animation_widget: ^1.2.0+2
-  macos_ui: # ^1.12.2
+  macos_ui:
     git:
       url: git@github.com:macosui/macos_ui.git
       ref: dev
