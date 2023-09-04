@@ -189,18 +189,19 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       return;
     }
     String prompt;
+    final displayMessage = message.text.trim();
     final chatType = _chatTypeTabController.index.toChatType;
     if (chatType == ChatType.cn) {
-      prompt = 'Translate into Chinese: ${message.text}';
+      prompt = 'Translate into Chinese: $displayMessage';
     } else if (chatType == ChatType.jap) {
-      prompt = 'Translate into Japanese: ${message.text}';
+      prompt = 'Translate into Japanese: $displayMessage';
     } else if (chatType == ChatType.en) {
-      prompt = 'Translate into English: ${message.text}';
+      prompt = 'Translate into English: $displayMessage';
     } else if (chatType == ChatType.image) {
-      _sendImage(message.text);
+      _sendImage(displayMessage);
       return;
     } else {
-      prompt = message.text;
+      prompt = displayMessage;
     }
     _sendPromptToGpt(prompt);
     // add my prompt message
@@ -208,7 +209,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       author: _user,
       createdAt: DateTime.now().millisecondsSinceEpoch,
       id: _uuid.v4(),
-      text: prompt.trim(),
+      text: displayMessage,
     );
     _addMessage(textMessage);
     // clear select prompt

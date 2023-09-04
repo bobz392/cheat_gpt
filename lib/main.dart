@@ -43,6 +43,14 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final token = ref.watch(tokenProvider);
+    // return MaterialApp(
+    //   home: Scaffold(
+    //     body: _tokenWidget(token),
+    //     // body: Container(
+    //     //   color: Colors.redAccent,
+    //     // ),
+    //   ),
+    // );
     return MacosApp(
         theme: MacosThemeData.light(),
         themeMode: ThemeMode.light,
