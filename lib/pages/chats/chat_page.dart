@@ -291,7 +291,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     final segment = MacosSegmentedControl(
       tabs: tabs,
-      controller: _chatTypeTabController,
+      controller: _modelTypeController,
     );
     _modelTypeController.index = currentModelIndex;
     return segment;
