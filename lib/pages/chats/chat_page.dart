@@ -38,12 +38,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   final _flutterTts = FlutterTts();
   final _chatTypeTabController =
       MacosTabController(initialIndex: 0, length: ChatType.values.length);
+  final _modelTypeController = MacosTabController(length: 2);
   final _textEditingController = TextEditingController();
 
   @override
   void initState() {
     OpenAI.apiKey = widget.token;
     debugPrint("token = ${widget.token}");
+    _modelTypeController.addListener(() {
+      int index = _modelTypeController.index;
+      ref.watch(modelTypeProvider.notifier).update((state) => index);
+    });
     super.initState();
   }
 
@@ -51,6 +56,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   void dispose() {
     super.dispose();
     _chatTypeTabController.dispose();
+    _modelTypeController.dispose();
     _textEditingController.dispose();
     _flutterTts.stop();
   }
@@ -62,6 +68,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         _textEditingController.text = next;
       }
     });
+    final currentModelIndex = ref.watch(modelTypeProvider.notifier);
     final messages = ref.watch(messagesProvider);
     ref.listen(promptResponseProvider, (previous, next) {
       if (next != null) {
@@ -109,7 +116,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               useTopSafeAreaInset: true,
               textMessageBuilder: _textMessageBuild,
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              customBottomWidget: _chatInputWidget(enableSend),
+              customBottomWidget:
+                  _chatInputWidget(enableSend, currentModelIndex.state),
               // onMessageDoubleTap: (context, message) {},
               onMessageTap: _chatTap,
             ),
@@ -203,7 +211,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     } else {
       prompt = displayMessage;
     }
-    _sendPromptToGpt(prompt);
+    String model;
+    if (_modelTypeController.index == 0) {
+      model = "gpt-3.5-turbo";
+    } else {
+      model = "gpt-4";
+    }
+    _sendPromptToGpt(prompt, model);
     // add my prompt message
     final textMessage = types.TextMessage(
       author: _user,
@@ -237,8 +251,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
   }
 
-  void _sendPromptToGpt(String prompt) async {
-    ref.read(promptResponseProvider.notifier).chatStart(prompt);
+  void _sendPromptToGpt(String prompt, String model) async {
+    ref.read(promptResponseProvider.notifier).chatStart(prompt, model);
   }
 
   void _addErrorMessage(Object error) {
@@ -270,29 +284,42 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
   }
 
-  Widget _createSegment() {
+  Widget _createModelTypeSegment(int currentModelIndex) {
+    final tabs = ['gpt-3.5', 'gpt-4.0']
+        .map((value) => MacosTab(label: value, active: false))
+        .toList();
+
+    final segment = MacosSegmentedControl(
+      tabs: tabs,
+      controller: _chatTypeTabController,
+    );
+    _modelTypeController.index = currentModelIndex;
+    return segment;
+  }
+
+  Widget _createPromptTypeSegment() {
     final tabs = ChatType.values
         .map((value) => MacosTab(label: value.displayName, active: false))
         .toList();
 
     return MacosSegmentedControl(
-      tabs: tabs,
-      controller: _chatTypeTabController,
-    );
+        tabs: tabs, controller: _chatTypeTabController);
   }
 
-  Widget _chatInputWidget(bool sendEnable) {
+  Widget _chatInputWidget(bool sendEnable, int currentModelIndex) {
     return Column(children: [
       Container(
         height: 30,
         color: GptColors.mainBlack,
-        child: Row(
-          children: [
-            const Spacer(),
-            _createSegment(),
-            const SizedBox(width: 30)
-          ],
-        ),
+        child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30),
+            child: Row(
+              children: [
+                _createModelTypeSegment(currentModelIndex),
+                const Spacer(),
+                _createPromptTypeSegment(),
+              ],
+            )),
       ),
       Container(
         height: 0.5,
@@ -334,18 +361,22 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   void _onKeyEvent(RawKeyEvent event) {
     if (event.runtimeType == RawKeyDownEvent) {
-      final chatType = _chatTypeTabController.index.toChatType;
-
-      if (event.physicalKey == PhysicalKeyboardKey.arrowRight) {
+      if (event.isMetaPressed) {
         setState(() {
-          _chatTypeTabController.index = chatType.next.rawValue;
-        });
-      } else if (event.physicalKey == PhysicalKeyboardKey.arrowLeft) {
-        setState(() {
-          _chatTypeTabController.index = chatType.last.rawValue;
+          if (event.physicalKey == PhysicalKeyboardKey.digit1) {
+            _chatTypeTabController.index = 0;
+          } else if (event.physicalKey == PhysicalKeyboardKey.digit2) {
+            _chatTypeTabController.index = 1;
+          } else if (event.physicalKey == PhysicalKeyboardKey.digit3) {
+            _chatTypeTabController.index = 2;
+          } else if (event.physicalKey == PhysicalKeyboardKey.digit4) {
+            _chatTypeTabController.index = 3;
+          } else if (event.physicalKey == PhysicalKeyboardKey.digit5) {
+            _chatTypeTabController.index = 4;
+          }
         });
       }
-      debugPrint('${event.physicalKey}');
+      debugPrint('${event.physicalKey}, ${event.isMetaPressed}');
     }
   }
 }

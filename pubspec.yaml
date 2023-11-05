@@ -1,28 +1,27 @@
 name: my_chat_gpt
 description: A new Flutter project.
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.19.2 <3.0.0'
+  sdk: ">=2.19.2 <3.0.0"
 
 dependencies:
-  csv: ^5.0.2
+  csv: ^5.1.1
   dart_openai: ^4.0.0
   flutter:
     sdk: flutter
-  flutter_chat_ui: ^1.6.8
-  flutter_riverpod: ^2.3.6
-  flutter_tts: ^3.6.3
-  loading_animation_widget: ^1.2.0+2
-  macos_ui:
-    git:
-      url: git@github.com:macosui/macos_ui.git
-      ref: dev
-  path_provider: ^2.0.14
-  url_launcher: ^6.1.10
-  uuid: ^3.0.6
-  window_manager: ^0.3.2
+  flutter_chat_ui: ^1.6.9
+  flutter_riverpod: ^2.4.5
+  flutter_tts: ^3.8.3
+  hive: ^2.2.3
+  loading_animation_widget: ^1.2.0+4
+  macos_ui: ^2.0.2
+  path_provider: ^2.1.1
+  riverpod: ^2.4.5
+  url_launcher: ^6.2.1
+  uuid: ^4.1.0
+  window_manager: ^0.3.7
   window_size:
     git:
       url: git://github.com/google/flutter-desktop-embedding.git

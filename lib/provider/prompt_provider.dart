@@ -23,3 +23,9 @@ final zhPromptsProvider = FutureProvider<List<dynamic>>((ref) async {
   final zhJson = json.decode(jsonString);
   return zhJson;
 });
+
+final modelTypeProvider = StateProvider((ref) {
+  // "gpt-3.5-turbo"
+  // "gpt-4"
+  return 0;
+});

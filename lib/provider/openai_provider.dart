@@ -60,10 +60,12 @@ class PromptResponse {
 class GptPromptResponseNotifier extends StateNotifier<PromptResponse?> {
   GptPromptResponseNotifier() : super(null);
 
-  void chatStart(String prompt) {
+  void chatStart(String prompt, String model) {
     // cteate stream
     var chatStream = OpenAI.instance.chat.createStream(
-      model: "gpt-3.5-turbo",
+      // "gpt-4"
+      // "gpt-3.5-turbo"
+      model: model,
       messages: [
         OpenAIChatCompletionChoiceMessageModel(
           content: prompt,
