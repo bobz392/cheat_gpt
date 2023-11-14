@@ -215,7 +215,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     if (_modelTypeController.index == 0) {
       model = "gpt-3.5-turbo";
     } else {
-      model = "gpt-4";
+      model = "gpt-4-1106-preview";
     }
     _sendPromptToGpt(prompt, model);
     // add my prompt message
