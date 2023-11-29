@@ -11,7 +11,9 @@ dependencies:
   dart_openai: ^4.0.0
   flutter:
     sdk: flutter
-  flutter_chat_ui: ^1.6.9
+  # flutter_chat_ui: ^1.6.10
+  flutter_chat_ui:
+    git: /Users/bobzhou/Developer/flutter/flutter_chat_ui
   flutter_riverpod: ^2.4.5
   flutter_tts: ^3.8.3
   hive: ^2.2.3

@@ -91,11 +91,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     });
     final enableSend = ref.watch(sendEnableProvider);
     const chatTheme = DefaultChatTheme(
-      backgroundColor: GptColors.mainBlack,
-      inputBackgroundColor: GptColors.secondaryBlack,
-      inputBorderRadius: BorderRadius.zero,
-      inputTextStyle: TextStyle(fontFamily: 'RooneySans'),
-    );
+        backgroundColor: GptColors.mainBlack,
+        inputBackgroundColor: GptColors.secondaryBlack,
+        inputBorderRadius: BorderRadius.zero,
+        inputTextStyle: TextStyle(fontFamily: 'RooneySans'),
+        messageMinWidth: double.infinity);
     return RawKeyboardListener(
       focusNode: FocusNode(),
       onKey: _onKeyEvent,
