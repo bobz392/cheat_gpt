@@ -62,13 +62,15 @@ class GptPromptResponseNotifier extends StateNotifier<PromptResponse?> {
 
   void chatStart(String prompt, String model) {
     // cteate stream
+    var itemModel =
+        OpenAIChatCompletionChoiceMessageContentItemModel.text(prompt);
     var chatStream = OpenAI.instance.chat.createStream(
       // "gpt-4"
       // "gpt-3.5-turbo"
       model: model,
       messages: [
         OpenAIChatCompletionChoiceMessageModel(
-          content: prompt,
+          content: [itemModel],
           role: OpenAIChatMessageRole.user,
         )
       ],
@@ -77,7 +79,7 @@ class GptPromptResponseNotifier extends StateNotifier<PromptResponse?> {
     String content = '';
     // listen to stream
     chatStream.listen((chatStreamEvent) {
-      final partial = chatStreamEvent.choices.first.delta.content;
+      final partial = chatStreamEvent.choices.first.delta.content?.first?.text;
       if (partial != null) {
         content += partial;
       }

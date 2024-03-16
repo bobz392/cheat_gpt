@@ -7,30 +7,29 @@ environment:
   sdk: ">=2.19.2 <3.0.0"
 
 dependencies:
-  csv: ^5.1.1
-  dart_openai: ^4.0.0
+  csv: ^6.0.0
+  dart_openai: ^5.1.0
   flutter:
     sdk: flutter
-  # flutter_chat_ui: ^1.6.10
   flutter_chat_ui:
     git: /Users/bobzhou/Developer/flutter/flutter_chat_ui
-  flutter_riverpod: ^2.4.5
-  flutter_tts: ^3.8.3
+  flutter_riverpod: ^2.5.1
+  flutter_tts: ^4.0.0
   hive: ^2.2.3
-  loading_animation_widget: ^1.2.0+4
-  macos_ui: ^2.0.2
+  loading_animation_widget: ^1.2.1
+  macos_ui: ^2.0.5
   path_provider: ^2.1.1
-  riverpod: ^2.4.5
-  url_launcher: ^6.2.1
+  riverpod: ^2.5.1
+  url_launcher: ^6.2.5
   uuid: ^4.1.0
-  window_manager: ^0.3.7
+  window_manager: ^0.3.8
   window_size:
     git:
       url: git://github.com/google/flutter-desktop-embedding.git
       path: plugins/window_size
 
 dev_dependencies:
-  flutter_lints: ^2.0.0
+  flutter_lints: ^3.0.1
   flutter_test:
     sdk: flutter
 

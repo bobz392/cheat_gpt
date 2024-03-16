@@ -1,4 +1,4 @@
-enum ChatType { chat, cn, jap, en, image }
+enum ChatType { chat, cn, jap, en, image, grammar }
 
 extension ChatTypeName on ChatType {
   String get displayName {
@@ -13,21 +13,8 @@ extension ChatTypeName on ChatType {
         return 'Chat';
       case ChatType.jap:
         return "Jap";
-    }
-  }
-
-  ChatType get next {
-    switch (this) {
-      case ChatType.cn:
-        return ChatType.jap;
-      case ChatType.en:
-        return ChatType.image;
-      case ChatType.image:
-        return ChatType.image;
-      case ChatType.chat:
-        return ChatType.cn;
-      case ChatType.jap:
-        return ChatType.en;
+      case ChatType.grammar:
+        return "Grammar";
     }
   }
 
@@ -43,21 +30,8 @@ extension ChatTypeName on ChatType {
         return 0;
       case ChatType.jap:
         return 2;
-    }
-  }
-
-  ChatType get last {
-    switch (this) {
-      case ChatType.cn:
-        return ChatType.chat;
-      case ChatType.en:
-        return ChatType.jap;
-      case ChatType.image:
-        return ChatType.en;
-      case ChatType.chat:
-        return ChatType.chat;
-      case ChatType.jap:
-        return ChatType.cn;
+      case ChatType.grammar:
+        return 5;
     }
   }
 
@@ -73,6 +47,8 @@ extension ChatTypeName on ChatType {
         return message;
       case ChatType.jap:
         return '翻译成日语: $message';
+      case ChatType.grammar:
+        return '纠正如下英语句子中的语法错误: $message';
     }
   }
 
@@ -80,12 +56,10 @@ extension ChatTypeName on ChatType {
     switch (this) {
       case ChatType.cn:
         return 'zh-CN';
-      case ChatType.en:
-        return 'en-US';
       case ChatType.jap:
         return "ja-JP";
       default:
-        return null;
+        return 'en-US';
     }
   }
 }

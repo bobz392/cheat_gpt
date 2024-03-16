@@ -196,21 +196,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       ref.read(tokenProvider.notifier).removeToken();
       return;
     }
-    String prompt;
     final displayMessage = message.text.trim();
     final chatType = _chatTypeTabController.index.toChatType;
-    if (chatType == ChatType.cn) {
-      prompt = 'Translate into Chinese: $displayMessage';
-    } else if (chatType == ChatType.jap) {
-      prompt = 'Translate into Japanese: $displayMessage';
-    } else if (chatType == ChatType.en) {
-      prompt = 'Translate into English: $displayMessage';
-    } else if (chatType == ChatType.image) {
-      _sendImage(displayMessage);
-      return;
-    } else {
-      prompt = displayMessage;
-    }
+    String prompt = chatType.buildCommand(displayMessage);
     String model;
     if (_modelTypeController.index == 0) {
       model = "gpt-3.5-turbo";
@@ -373,6 +361,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             _chatTypeTabController.index = 3;
           } else if (event.physicalKey == PhysicalKeyboardKey.digit5) {
             _chatTypeTabController.index = 4;
+          } else if (event.physicalKey == PhysicalKeyboardKey.digit6) {
+            _chatTypeTabController.index = 5;
           }
         });
       }
